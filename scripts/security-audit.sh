@@ -1,19 +1,17 @@
 #!/usr/bin/env zsh
 # security-audit.sh — Weekly security posture verification
 # Runs via LaunchAgent every Sunday at 04:00
-# Checks critical security controls and alerts on drift
 
 set -uo pipefail
 
-export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/usr/sbin:/bin:/sbin"
-
-UPKEEP_DIR="${MAC_UPKEEP_DIR:-$HOME/.mac-upkeep}"
-LOG_DIR="$UPKEEP_DIR/logs"
+LOG="security-audit.log"  # Placeholder
+source "${0:A:h}/common.sh"
 LOG="$LOG_DIR/security-audit.log"
 REPORT="$LOG_DIR/security-report-$(date +%Y-%m-%d).txt"
-mkdir -p "$LOG_DIR"
 
-TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+rotate_log "$LOG"
+acquire_lock || exit 0
+
 ISSUES=0
 WARNINGS=0
 
@@ -79,12 +77,14 @@ else
 fi
 
 # ── 8. Auto-Update Settings ─────────────────────────
-AUTO_DL=$(defaults read /Library/Preferences/com.apple.SoftwareUpdate AutomaticDownload 2>/dev/null || echo "0")
-AUTO_INSTALL=$(defaults read /Library/Preferences/com.apple.SoftwareUpdate AutomaticallyInstallMacOSUpdates 2>/dev/null || echo "0")
-CRITICAL_INSTALL=$(defaults read /Library/Preferences/com.apple.SoftwareUpdate CriticalUpdateInstall 2>/dev/null || echo "0")
+AUTO_DL=$(defaults read /Library/Preferences/com.apple.SoftwareUpdate AutomaticDownload 2>/dev/null || echo "unknown")
+AUTO_INSTALL=$(defaults read /Library/Preferences/com.apple.SoftwareUpdate AutomaticallyInstallMacOSUpdates 2>/dev/null || echo "unknown")
+CRITICAL_INSTALL=$(defaults read /Library/Preferences/com.apple.SoftwareUpdate CriticalUpdateInstall 2>/dev/null || echo "unknown")
 
-if (( AUTO_DL == 1 && AUTO_INSTALL == 1 && CRITICAL_INSTALL == 1 )); then
+if [[ "$AUTO_DL" == "1" && "$AUTO_INSTALL" == "1" && "$CRITICAL_INSTALL" == "1" ]]; then
     pass "Automatic updates fully enabled (download + install + critical)"
+elif [[ "$AUTO_DL" == "unknown" ]]; then
+    info "Auto-update settings: unable to read (permission denied)"
 else
     warn "Automatic update settings incomplete (AutoDL=$AUTO_DL, AutoInstall=$AUTO_INSTALL, Critical=$CRITICAL_INSTALL)"
 fi
@@ -107,7 +107,7 @@ if (( ISSUES > 0 )); then
     osascript -e "display notification \"$ISSUES security FAILURES detected\" with title \"Security Audit\" subtitle \"Review: ~/.mac-upkeep/logs/\"" 2>/dev/null || true
 fi
 
-echo "[$TIMESTAMP] Security audit: $ISSUES failures, $WARNINGS warnings" >> "$LOG"
+log "Security audit: $ISSUES failures, $WARNINGS warnings"
 
-# Rotate old reports (keep 12 weeks)
-find "$LOG_DIR" -name "security-report-*.txt" -mtime +84 -delete 2>/dev/null || true
+# Rotate old reports
+find "$LOG_DIR" -name "security-report-*.txt" -mtime +${SECURITY_REPORT_RETENTION_DAYS:-84} -delete 2>/dev/null || true

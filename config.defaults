@@ -1,0 +1,88 @@
+# mac-upkeep configuration
+# Copy to ~/.mac-upkeep/config to customize. Values here are defaults.
+# Lines starting with # are comments. This file is sourced as shell.
+
+# ── General ──────────────────────────────────────────
+# Set to "true" to preview what scripts would do without making changes.
+DRY_RUN=false
+
+# ── Cache Cleanup ────────────────────────────────────
+# Minimum size (KB) before a cache directory is eligible for cleanup.
+CACHE_THRESHOLD_KB=102400  # 100 MB
+
+# Age (days) after which Trash items are removed.
+CACHE_TRASH_MAX_AGE_DAYS=30
+
+# Age (days) after which app log files are pruned.
+CACHE_LOG_MAX_AGE_DAYS=7
+
+# Cache directories to clean. Format: "path|label" per line.
+# Add your own entries or comment out lines to disable specific targets.
+# Paths support ~ for home directory.
+CACHE_TARGETS=(
+    "~/Library/Caches/com.google.antigravity.ShipIt|Chrome updater staging"
+    "~/Library/Caches/com.anthropic.claudefordesktop.ShipIt|Claude Desktop updater staging"
+    "~/Library/Caches/pencil-updater|Pencil updater staging"
+    "~/Library/Caches/Google/Chrome/Default/Cache|Chrome browser cache"
+    "~/Library/Caches/Google/Chrome/Default/Code Cache|Chrome code cache"
+    "~/Library/Caches/com.spotify.client|Spotify cache"
+    "~/Library/Caches/node-gyp|node-gyp build cache"
+    "~/Library/Caches/ms-playwright|Playwright browsers"
+    "~/Library/Caches/ms-playwright-go|Playwright Go browsers"
+    "~/Library/Developer/Xcode/DerivedData|Xcode DerivedData"
+    "~/Library/Caches/pip|pip cache"
+    "~/Library/Caches/com.microsoft.Teams|Teams cache"
+    "~/Library/Caches/Firefox|Firefox cache"
+    "~/Library/Caches/com.docker.docker|Docker cache"
+    "~/Library/Caches/org.gradle|Gradle cache"
+    "~/Library/Caches/JetBrains|JetBrains IDE cache"
+    "~/Library/Caches/com.microsoft.VSCode|VS Code cache"
+)
+
+# ── Disk Health ──────────────────────────────────────
+# Disk space thresholds for alerts (GB).
+DISK_ALERT_CRITICAL_GB=10
+DISK_ALERT_WARN_GB=25
+
+# Alert if uptime exceeds this many days.
+UPTIME_WARN_DAYS=14
+
+# Alert if swap exceeds this many MB.
+SWAP_WARN_MB=8192
+
+# ── Homebrew ─────────────────────────────────────────
+# Set to "true" to automatically upgrade formulae. "false" = report only.
+BREW_AUTO_UPGRADE=true
+
+# Set to "true" to automatically upgrade casks.
+BREW_CASK_AUTO_UPGRADE=true
+
+# Formulae/casks to never upgrade automatically. Space-separated.
+BREW_BLOCKLIST=()
+
+# Days to keep old downloads before pruning.
+BREW_CLEANUP_PRUNE_DAYS=7
+
+# Set to "true" to update npm global packages.
+BREW_NPM_GLOBAL_UPDATE=true
+
+# ── Snapshot Thinning ────────────────────────────────
+# Bytes to request as reclaimable space target.
+SNAPSHOT_THIN_BYTES=53687091200  # 50 GB
+
+# Urgency level (1=gentle, 4=aggressive).
+SNAPSHOT_THIN_URGENCY=3
+
+# ── Security Audit ───────────────────────────────────
+# Days to keep weekly security reports.
+SECURITY_REPORT_RETENTION_DAYS=84  # 12 weeks
+
+# Days to keep weekly disk health reports.
+DISK_REPORT_RETENTION_DAYS=84
+
+# ── Log Rotation ─────────────────────────────────────
+# Maximum log file size in KB before rotation.
+LOG_MAX_SIZE_KB=1024  # 1 MB
+
+# Number of rotated log files to keep.
+LOG_ROTATE_COUNT=3

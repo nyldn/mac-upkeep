@@ -123,7 +123,7 @@ PLIST
 # Daily at 02:30 (skip if no Homebrew)
 if [[ "$SKIP_BREW" == "false" ]]; then
     generate_plist "com.mac-upkeep.brew-maintenance" "brew-maintenance.sh" \
-        "<dict><key>Hour</key><integer>2</integer><key>Minute</key><integer>30</integer></dict>" 15
+        "<dict><key>Hour</key><integer>2</integer><key>Minute</key><integer>30</integer></dict>"
 fi
 
 # Daily at 03:00

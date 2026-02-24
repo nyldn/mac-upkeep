@@ -55,7 +55,8 @@ diskutil apfs list 2>/dev/null | grep -E "Container|Capacity|Free Space" >> "$RE
 # ── 4. Local Snapshots ──────────────────────────────
 echo "" >> "$REPORT"
 echo "--- Time Machine Local Snapshots ---" >> "$REPORT"
-SNAP_COUNT=$(tmutil listlocalsnapshots / 2>/dev/null | grep -c "com.apple" || echo "0")
+SNAP_COUNT=$(tmutil listlocalsnapshots / 2>/dev/null | grep -c "com.apple" || true)
+SNAP_COUNT=${SNAP_COUNT:-0}
 echo "Snapshot count: $SNAP_COUNT" >> "$REPORT"
 tmutil listlocalsnapshots / >> "$REPORT" 2>/dev/null || echo "  (none)" >> "$REPORT"
 

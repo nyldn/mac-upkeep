@@ -52,13 +52,18 @@ if [[ "${BREW_AUTO_UPGRADE:-true}" == "true" ]]; then
     log "Running brew upgrade..."
 
     # Build blocklist exclude args
-    local exclude_args=()
+    typeset -a exclude_args=()
     for blocked in "${BREW_BLOCKLIST[@]}"; do
         [[ -n "$blocked" ]] && exclude_args+=(--ignore="$blocked")
     done
 
-    run_or_dry "upgrade Homebrew formulae" \
-        brew upgrade "${exclude_args[@]}" >> "$LOG" 2>&1 || log "WARN: Some formulae failed to upgrade"
+    if (( ${#exclude_args} > 0 )); then
+        run_or_dry "upgrade Homebrew formulae (with blocklist)" \
+            brew upgrade "${exclude_args[@]}" >> "$LOG" 2>&1 || log "WARN: Some formulae failed to upgrade"
+    else
+        run_or_dry "upgrade Homebrew formulae" \
+            brew upgrade >> "$LOG" 2>&1 || log "WARN: Some formulae failed to upgrade"
+    fi
 else
     log "BREW_AUTO_UPGRADE=false — skipping formula upgrades (outdated packages logged above)"
 fi

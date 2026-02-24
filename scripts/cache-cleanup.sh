@@ -22,10 +22,13 @@ safe_clean() {
         local size_kb
         size_kb=$(du -sk "$dir" 2>/dev/null | awk '{print $1}')
         if (( size_kb > ${CACHE_THRESHOLD_KB:-102400} )); then
-            run_or_dry "clean $label ($((size_kb / 1024)) MB)" \
-                find "$dir" -mindepth 1 -delete
-            log "CLEANED: $label ($((size_kb / 1024)) MB)"
-            TOTAL_FREED=$((TOTAL_FREED + size_kb))
+            if [[ "${DRY_RUN:-false}" == "true" ]]; then
+                log "DRY-RUN: Would clean $label ($((size_kb / 1024)) MB)"
+            else
+                find "$dir" -mindepth 1 -delete 2>/dev/null
+                log "CLEANED: $label ($((size_kb / 1024)) MB)"
+                TOTAL_FREED=$((TOTAL_FREED + size_kb))
+            fi
         fi
     fi
 }
@@ -38,9 +41,9 @@ fi
 
 # Clean targets from config (user-customizable list)
 for entry in "${CACHE_TARGETS[@]}"; do
-    local path="${entry%%|*}"
-    local label="${entry##*|}"
-    safe_clean "$path" "$label"
+    _target_path="${entry%%|*}"
+    _target_label="${entry##*|}"
+    safe_clean "$_target_path" "$_target_label"
 done
 
 # Application logs over threshold — only remove files older than configured days
@@ -48,9 +51,12 @@ for logdir in ~/Library/Logs/*/; do
     if [[ -d "$logdir" ]]; then
         local_size=$(du -sk "$logdir" 2>/dev/null | awk '{print $1}')
         if (( local_size > ${CACHE_THRESHOLD_KB:-102400} )); then
-            run_or_dry "prune logs >$CACHE_LOG_MAX_AGE_DAYS days in $(basename "$logdir")" \
-                find "$logdir" -type f -mtime +${CACHE_LOG_MAX_AGE_DAYS:-7} -delete
-            log "PRUNED logs >${CACHE_LOG_MAX_AGE_DAYS:-7}d: $(basename "$logdir")"
+            if [[ "${DRY_RUN:-false}" == "true" ]]; then
+                log "DRY-RUN: Would prune logs >${CACHE_LOG_MAX_AGE_DAYS:-7}d in $(basename "$logdir")"
+            else
+                find "$logdir" -type f -mtime +${CACHE_LOG_MAX_AGE_DAYS:-7} -delete 2>/dev/null
+                log "PRUNED logs >${CACHE_LOG_MAX_AGE_DAYS:-7}d: $(basename "$logdir")"
+            fi
         fi
     fi
 done
@@ -58,9 +64,12 @@ done
 # Trash items older than configured days (only if trash exceeds threshold)
 TRASH_SIZE=$(du -sk ~/.Trash 2>/dev/null | awk '{print $1}')
 if (( TRASH_SIZE > ${CACHE_THRESHOLD_KB:-102400} )); then
-    run_or_dry "prune Trash items >$CACHE_TRASH_MAX_AGE_DAYS days" \
-        find ~/.Trash -mindepth 1 -mtime +${CACHE_TRASH_MAX_AGE_DAYS:-30} -delete
-    log "PRUNED Trash items >${CACHE_TRASH_MAX_AGE_DAYS:-30} days"
+    if [[ "${DRY_RUN:-false}" == "true" ]]; then
+        log "DRY-RUN: Would prune Trash items >${CACHE_TRASH_MAX_AGE_DAYS:-30} days"
+    else
+        find ~/.Trash -mindepth 1 -mtime +${CACHE_TRASH_MAX_AGE_DAYS:-30} -delete 2>/dev/null
+        log "PRUNED Trash items >${CACHE_TRASH_MAX_AGE_DAYS:-30} days"
+    fi
 fi
 
 # Disk space check — notify if critically low

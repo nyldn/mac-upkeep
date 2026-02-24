@@ -18,7 +18,8 @@ if [[ "${DRY_RUN:-false}" == "true" ]]; then
 fi
 
 # Count current snapshots
-BEFORE_COUNT=$(tmutil listlocalsnapshots / 2>/dev/null | grep -c "com.apple" || echo "0")
+BEFORE_COUNT=$(tmutil listlocalsnapshots / 2>/dev/null | grep -c "com.apple" || true)
+BEFORE_COUNT=${BEFORE_COUNT:-0}
 log "Snapshots before: $BEFORE_COUNT"
 
 AVAIL_BEFORE=$(df -g / | awk 'NR==2{print $4}')
@@ -31,7 +32,8 @@ log "Thinning command executed"
 
 sleep 5
 
-AFTER_COUNT=$(tmutil listlocalsnapshots / 2>/dev/null | grep -c "com.apple" || echo "0")
+AFTER_COUNT=$(tmutil listlocalsnapshots / 2>/dev/null | grep -c "com.apple" || true)
+AFTER_COUNT=${AFTER_COUNT:-0}
 AVAIL_AFTER=$(df -g / | awk 'NR==2{print $4}')
 
 log "Snapshots after: $AFTER_COUNT (removed $((BEFORE_COUNT - AFTER_COUNT)))"
